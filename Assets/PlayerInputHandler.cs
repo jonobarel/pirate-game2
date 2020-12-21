@@ -6,10 +6,11 @@ using UnityEngine.InputSystem.Controls;
 
 public class PlayerInputHandler : MonoBehaviour
 {
-
+   
+    public GameObject ship;
     private Vector3 destination = Vector3.zero;
     
-    private float MAX_VELOCITY = 50.0f;
+    private float MAX_VELOCITY = 20.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -20,20 +21,32 @@ public class PlayerInputHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log("Moving towards " + destination);
-        
+        ship.transform.position = Vector3.MoveTowards(ship.transform.position, destination, MAX_VELOCITY*Time.deltaTime);
+        return;
+      
     }
 
     public void MouseClick(InputAction.CallbackContext context)
     {
         int action = (int)context.ReadValue<System.Single>();
+        Debug.Log("MouseClick event detected");
 
         if (action == 1) {
-            Vector3 clickLocation = Mouse.current.position.ReadValue();
-            clickLocation.z = Camera.main.nearClipPlane;
-            //Debug.Log("Registered a click at " + clickLocation);
-            destination = Camera.main.ScreenToWorldPoint(clickLocation);
-            Debug.Log ("registered world location at " + destination);
+            Vector2 clickLocation = Mouse.current.position.ReadValue();
+            Ray ray = Camera.main.ScreenPointToRay(clickLocation);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity)) {
+                Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+                Debug.Log("Clicked on " + hit.collider.name);
+                destination = hit.point;
+                destination.y = ship.transform.position.y;
+            }
+             else
+            {
+                Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 1000, Color.white);
+                Debug.Log("Did not Hit");
+            }
         }
         
     }
